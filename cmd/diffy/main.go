@@ -2,7 +2,7 @@ package main
 
 import (
 	"diffy/internal/fetcher"
-	"fmt"
+	"diffy/internal/storage"
 	"log"
 )
 
@@ -14,5 +14,7 @@ func main() {
 		log.Fatalf("fetch failed: %v", err)
 	}
 
-	fmt.Println("Fetched HTML length:", html)
+	storage.SaveHTML("root", html[0])
+
+	// fmt.Println("Fetched HTML length:", html)
 }
