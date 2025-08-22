@@ -31,4 +31,8 @@ go.work.sum
 # .idea/
 # .vscode/
 
-snapshots
+# ignore snapshots by default
+snapshots/*
+
+# but allow this specific folder (for action)
+!snapshots/.gitkeep
