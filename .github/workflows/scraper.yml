@@ -35,10 +35,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Only commit if there are changes
-          if ! git diff --cached --quiet; then
-            git commit -m "Update snapshots"
-            git push
-          else
-            echo "No changes in snapshots, skipping commit."
-          fi
+          git commit -m "Update snapshots"
+          git push
