@@ -5,18 +5,15 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/yosssi/gohtml"
 )
 
 func SaveHTML(filename string, content string) error {
 	timestamp := time.Now().Format("2006-01-02---15:04:05")
 	fileNameWithTime := fmt.Sprintf("%s(%s).html", filename, timestamp)
 
-	rootDir, err := filepath.Abs(filepath.Join("../.."))
-	if err != nil {
-		return fmt.Errorf("failed to get project root path: %w", err)
-	}
-
-	dirPath := filepath.Join(rootDir, "snapshots")
+	dirPath := filepath.Join("snapshots")
 	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
 		return fmt.Errorf("failed to create snapshots dir: %w", err)
 	}
@@ -25,7 +22,9 @@ func SaveHTML(filename string, content string) error {
 
 	fmt.Println("Saving content in to:", filePath)
 
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	prettyContent := gohtml.Format(content)
+
+	if err := os.WriteFile(filePath, []byte(prettyContent), 0644); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
