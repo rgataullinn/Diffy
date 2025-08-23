@@ -8,7 +8,7 @@ import (
 )
 
 func SaveHTML(filename string, content string) error {
-	timestamp := time.Now().Format("20060102-150405")
+	timestamp := time.Now().Format("2006-01-02---15:04:05")
 	fileNameWithTime := fmt.Sprintf("%s(%s).html", filename, timestamp)
 
 	rootDir, err := filepath.Abs(filepath.Join("../.."))
