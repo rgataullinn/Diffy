@@ -19,44 +19,42 @@ jobs:
 
       - name: Get two latest snapshot files
         run: |
-          files=($(ls -t snapshots | head -n 2))
-          echo "latest1=${files[0]}" >> $GITHUB_ENV
-          echo "latest2=${files[1]}" >> $GITHUB_ENV
-          # echo "Comparing ${files[1]} (older) vs ${files[0]} (newer)"
+          readarray -t files < <(ls -t snapshots | head -n 2)
+          latest1="${files[0]}"
+          latest2="${files[1]}"
+          echo "latest1=$latest1" >> $GITHUB_ENV
+          echo "latest2=$latest2" >> $GITHUB_ENV
 
-          - name: Compare snapshots and create branches
-          run: |
-            if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
-              branch_old="snapshot-old-$(date +%s)"
-              branch_new="snapshot-new-$(date +%s)"
-              
-              # Create branch for older snapshot
-              git checkout --orphan "$branch_old"
-              git reset --hard
-              mkdir snapshots
-              cp "snapshots/${latest2}" snapshots/current.txt
-              git add snapshots/current.txt
-              git commit -m "Older snapshot"
-              git push origin "$branch_old"
-        
-              # Switch back to main and create branch for newer snapshot
-              git checkout main
-              git checkout --orphan "$branch_new"
-              git reset --hard
-              mkdir snapshots
-              cp "snapshots/${latest1}" snapshots/current.txt
-              git add snapshots/current.txt
-              git commit -m "Newer snapshot"
-              git push origin "$branch_new"
-        
-              echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old...$branch_new" >> $GITHUB_ENV
-              exit 1
-            else
-              echo "Snapshots are identical"
-            fi        
+      - name: Compare snapshots and create branches
+        run: |
+          if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
+            branch_old="snapshot-old-$(date +%s)"
+            branch_new="snapshot-new-$(date +%s)"
+            
+            # Create branch for older snapshot
+            git checkout --orphan "$branch_old"
+            git reset --hard
+            mkdir snapshots
+            cp "snapshots/${latest2}" snapshots/current.txt
+            git add snapshots/current.txt
+            git commit -m "Older snapshot"
+            git push origin "$branch_old"
+      
+            # Switch back to main and create branch for newer snapshot
+            git checkout main
+            git checkout --orphan "$branch_new"
+            git reset --hard
+            mkdir snapshots
+            cp "snapshots/${latest1}" snapshots/current.txt
+            git add snapshots/current.txt
+            git commit -m "Newer snapshot"
+            git push origin "$branch_new"
+      
+            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old...$branch_new" >> $GITHUB_ENV
+            exit 1
+          fi
 
       - name: Show GitHub diff link
         if: failure()
         run: |
-          echo "👉 View visual diff on GitHub:"
           echo "$DIFF_URL"
