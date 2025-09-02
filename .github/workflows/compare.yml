@@ -24,36 +24,36 @@ jobs:
           echo "latest2=${files[1]}" >> $GITHUB_ENV
           echo "Comparing ${files[1]} (older) vs ${files[0]} (newer)"
 
-      - name: Compare snapshots and create branches
-        run: |
-          if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
-            branch_old="snapshot-old-$(date +%s)"
-            branch_new="snapshot-new-$(date +%s)"
-            
-            # Create branch for older snapshot
-            git checkout --orphan "$branch_old"
-            git reset --hard
-            mkdir snapshots
-            cp "snapshots/${latest2}" snapshots/current.txt
-            git add snapshots/current.txt
-            git commit -m "Older snapshot"
-            git push origin "$branch_old"
-
-            # Switch back to main and create branch for newer snapshot
-            git checkout main
-            git checkout --orphan "$branch_new"
-            git reset --hard
-            mkdir snapshots
-            cp "snapshots/${latest1}" snapshots/current.txt
-            git add snapshots/current.txt
-            git commit -m "Newer snapshot"
-            git push origin "$branch_new"
-
-            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old...$branch_new" >> $GITHUB_ENV
-            exit 1
-          else
-            echo "Snapshots are identical"
-          fi
+          - name: Compare snapshots and create branches
+          run: |
+            if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
+              branch_old="snapshot-old-$(date +%s)"
+              branch_new="snapshot-new-$(date +%s)"
+              
+              # Create branch for older snapshot
+              git checkout --orphan "$branch_old"
+              git reset --hard
+              mkdir snapshots
+              cp "snapshots/${latest2}" snapshots/current.txt
+              git add snapshots/current.txt
+              git commit -m "Older snapshot"
+              git push origin "$branch_old"
+        
+              # Switch back to main and create branch for newer snapshot
+              git checkout main
+              git checkout --orphan "$branch_new"
+              git reset --hard
+              mkdir snapshots
+              cp "snapshots/${latest1}" snapshots/current.txt
+              git add snapshots/current.txt
+              git commit -m "Newer snapshot"
+              git push origin "$branch_new"
+        
+              echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old...$branch_new" >> $GITHUB_ENV
+              exit 1
+            else
+              echo "Snapshots are identical"
+            fi        
 
       - name: Show GitHub diff link
         if: failure()
