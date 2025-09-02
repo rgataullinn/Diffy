@@ -1,0 +1,38 @@
+name: Compare Latest Snapshots
+
+on:
+    workflow_dispatch: # manual trigger
+
+jobs:
+  compare-snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Need full history for diff
+
+      - name: Get latest commit hashes
+        run: |
+          echo "old_commit=$(git rev-parse HEAD^)" >> $GITHUB_ENV
+          echo "new_commit=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: Get two latest snapshot files
+        run: |
+          files=($(ls -t snapshots | head -n 2))
+          echo "latest1=${files[0]}" >> $GITHUB_ENV
+          echo "latest2=${files[1]}" >> $GITHUB_ENV
+          echo "Comparing ${files[1]} vs ${files[0]}"
+
+      - name: Compare snapshots
+        run: |
+          if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
+            echo "DIFF_URL=https://github.com/rgataullinn/Diffy/compare/${old_commit}...${new_commit}" >> $GITHUB_ENV
+            echo "Snapshots differ!"
+            exit 1
+          fi
+
+      - name: Show compare link
+        if: failure()
+        run: |
+          echo "View full GitHub diff here: $DIFF_URL"
