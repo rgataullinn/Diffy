@@ -14,8 +14,8 @@ jobs:
 
       - name: Configure Git user
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Get two latest snapshot files
         run: |
@@ -54,7 +54,7 @@ jobs:
             git commit -m "Newer snapshot"
             git push origin "$branch_new"
 
-            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old...$branch_new" >> $GITHUB_ENV
+            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old..$branch_new" >> $GITHUB_ENV
             exit 1
           fi
 

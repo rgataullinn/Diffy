@@ -6,15 +6,28 @@ import (
 	"log"
 )
 
-func main() {
-	url := "https://www.ulta.com/p/macximal-sleek-satin-lipstick-pimprod2047503?sku=2630257"
+type url_data struct {
+	id  string
+	url string
+}
 
-	html, err := fetcher.GetHTML(url, "#root")
-	if err != nil {
-		log.Fatalf("fetch failed: %v", err)
+func main() {
+	data := map[string][]url_data{
+		"ulta": {
+			{"pimprod2047503", "https://www.ulta.com/p/macximal-sleek-satin-lipstick-pimprod2047503?sku=2630257"},
+			{"xlsImpprod10792007", "https://www.ulta.com/p/almost-lipstick-xlsImpprod10792007?sku=2153395"},
+			{"pimprod2044074", "https://www.ulta.com/p/dream-coat-curly-hair-pimprod2044074?sku=2647829"},
+		},
 	}
 
-	storage.SaveHTML("root", html[0])
+	for client, urls := range data {
+		for _, url_data := range urls {
+			html, err := fetcher.GetHTML(url_data.url, "#root")
+			if err != nil {
+				log.Fatalf("fetch failed: %v", err)
+			}
 
-	// fmt.Println("Fetched HTML length:", html)
+			storage.SaveHTML("root", html[0], "snapshots/"+client+"/"+url_data.id)
+		}
+	}
 }
