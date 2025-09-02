@@ -1,7 +1,7 @@
 name: Compare Latest Snapshots
 
 on:
-    workflow_dispatch: # manual trigger
+  workflow_dispatch: # Run manually for now
 
 jobs:
   compare-snapshots:
@@ -10,29 +10,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Need full history for diff
+          fetch-depth: 0
 
-      - name: Get latest commit hashes
+      - name: Configure Git user
         run: |
-          echo "old_commit=$(git rev-parse HEAD^)" >> $GITHUB_ENV
-          echo "new_commit=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Get two latest snapshot files
         run: |
           files=($(ls -t snapshots | head -n 2))
           echo "latest1=${files[0]}" >> $GITHUB_ENV
           echo "latest2=${files[1]}" >> $GITHUB_ENV
-          echo "Comparing ${files[1]} vs ${files[0]}"
+          echo "Comparing ${files[1]} (older) vs ${files[0]} (newer)"
 
-      - name: Compare snapshots
+      - name: Compare snapshots and create diff branch
         run: |
           if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
-            echo "DIFF_URL=https://github.com/rgataullinn/Diffy/compare/${old_commit}...${new_commit}" >> $GITHUB_ENV
-            echo "Snapshots differ!"
+            branch="snapshot-diff-$(date +%s)"
+            git checkout --orphan "$branch"
+            git rm -rf .
+            mkdir snapshots
+            cp "snapshots/${latest2}" snapshots/older.txt
+            git add snapshots/older.txt
+            git commit -m "Older snapshot"
+            cp "snapshots/${latest1}" snapshots/newer.txt
+            git add snapshots/newer.txt
+            git commit -m "Newer snapshot"
+            git push origin "$branch"
+            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch" >> $GITHUB_ENV
             exit 1
+          else
+            echo "Snapshots are identical"
           fi
 
-      - name: Show compare link
+      - name: Show diff link
         if: failure()
         run: |
-          echo "View full GitHub diff here: $DIFF_URL"
+          echo "👉 View visual diff on GitHub:"
+          echo "$DIFF_URL"
