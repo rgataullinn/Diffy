@@ -1,7 +1,7 @@
 name: Compare Latest Snapshots
 
 on:
-  workflow_dispatch: # Run manually for now
+  workflow_dispatch: # or push / pull_request
 
 jobs:
   compare-snapshots:
@@ -14,8 +14,8 @@ jobs:
 
       - name: Configure Git user
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Get two latest snapshot files
         run: |
@@ -24,27 +24,38 @@ jobs:
           echo "latest2=${files[1]}" >> $GITHUB_ENV
           echo "Comparing ${files[1]} (older) vs ${files[0]} (newer)"
 
-      - name: Compare snapshots and create diff branch
+      - name: Compare snapshots and create branches
         run: |
           if ! diff -q "snapshots/${latest2}" "snapshots/${latest1}"; then
-            branch="snapshot-diff-$(date +%s)"
-            git checkout --orphan "$branch"
-            git rm -rf .
+            branch_old="snapshot-old-$(date +%s)"
+            branch_new="snapshot-new-$(date +%s)"
+            
+            # Create branch for older snapshot
+            git checkout --orphan "$branch_old"
+            git reset --hard
             mkdir snapshots
-            cp "snapshots/${latest2}" snapshots/older.txt
-            git add snapshots/older.txt
+            cp "snapshots/${latest2}" snapshots/current.txt
+            git add snapshots/current.txt
             git commit -m "Older snapshot"
-            cp "snapshots/${latest1}" snapshots/newer.txt
-            git add snapshots/newer.txt
+            git push origin "$branch_old"
+
+            # Switch back to main and create branch for newer snapshot
+            git checkout main
+            git checkout --orphan "$branch_new"
+            git reset --hard
+            mkdir snapshots
+            cp "snapshots/${latest1}" snapshots/current.txt
+            git add snapshots/current.txt
             git commit -m "Newer snapshot"
-            git push origin "$branch"
-            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch" >> $GITHUB_ENV
+            git push origin "$branch_new"
+
+            echo "DIFF_URL=https://github.com/${GITHUB_REPOSITORY}/compare/$branch_old...$branch_new" >> $GITHUB_ENV
             exit 1
           else
             echo "Snapshots are identical"
           fi
 
-      - name: Show diff link
+      - name: Show GitHub diff link
         if: failure()
         run: |
           echo "👉 View visual diff on GitHub:"
