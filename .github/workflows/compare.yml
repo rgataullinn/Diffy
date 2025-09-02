@@ -22,7 +22,7 @@ jobs:
           files=($(ls -t snapshots | head -n 2))
           echo "latest1=${files[0]}" >> $GITHUB_ENV
           echo "latest2=${files[1]}" >> $GITHUB_ENV
-          echo "Comparing ${files[1]} (older) vs ${files[0]} (newer)"
+          # echo "Comparing ${files[1]} (older) vs ${files[0]} (newer)"
 
           - name: Compare snapshots and create branches
           run: |
